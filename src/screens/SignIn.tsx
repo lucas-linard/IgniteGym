@@ -6,7 +6,7 @@ import { AuthNavigationRouteProps } from "@routes/auth.routes";
 import BackgroundImg from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
 import { Input } from "@components/Input";
-import { Button } from "@components/Buttom";
+import { Button } from "@components/Button";
 
 export function SignIn() {
   const navigation = useNavigation<AuthNavigationRouteProps>();

@@ -3,7 +3,7 @@ import { VStack, Image, Center, Text, Heading, ScrollView } from "native-base";
 import BackgroundImg from "@assets/background.png";
 import LogoSvg from "@assets/logo.svg";
 import { Input } from "@components/Input";
-import { Button } from "@components/Buttom";
+import { Button } from "@components/Button";
 import { useNavigation } from "@react-navigation/native";
 
 export function SignUp() {
