@@ -14,10 +14,12 @@ export default function App() {
     <NativeBaseProvider theme={theme}>
       <StatusBar style="light" backgroundColor="transparent" translucent />
       <AuthContext.Provider value={{
-        id: 4,
+        user: {
+        id: '4',
         name: "Lucas Alencar",
         email: "lucasalencar@dev.com",
         avatar: "Lucas.png"
+        }
       }}>
       {fontsLoaded ? <Routes/> : <Loading />}
       </AuthContext.Provider>
