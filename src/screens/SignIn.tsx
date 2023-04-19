@@ -1,4 +1,13 @@
-import { VStack, Image, Center, Text, Heading, ScrollView, useToast } from "native-base";
+import { useState } from "react";
+import {
+  VStack,
+  Image,
+  Center,
+  Text,
+  Heading,
+  ScrollView,
+  useToast,
+} from "native-base";
 import { useNavigation } from "@react-navigation/native";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
@@ -23,32 +32,41 @@ const signInSchema = yup.object({
   password: yup.string().required("Informe a senha."),
 });
 export function SignIn() {
-  const { signIn,user } = useAuth();
-  const toast = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const toast = useToast();
 
   const navigation = useNavigation<AuthNavigationRouteProps>();
-  
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: yupResolver(signInSchema),
   });
 
   function handleNewAccount() {
-    navigation.navigate("signUp")
+    navigation.navigate("signUp");
   }
 
-  async function handleSignIn({email, password}: FormData) {
+  async function handleSignIn({ email, password }: FormData) {
     try {
-      await signIn(email, password)
-      
+      setIsLoading(true);
+      await signIn(email, password);
     } catch (error) {
       const isAppError = error instanceof AppError;
 
-      const ErrorMessage = isAppError ? error.message : "Não foi possível fazer o login.\nTente novamente.";
+      setIsLoading(false);
+
+      const ErrorMessage = isAppError
+        ? error.message
+        : "Não foi possível fazer o login.\nTente novamente.";
       toast.show({
         title: ErrorMessage,
         placement: "top",
         bgColor: "red.500",
-      })
+      });
     }
   }
   return (
@@ -112,7 +130,11 @@ export function SignIn() {
               />
             )}
           />
-          <Button title="Acessar" onPress={handleSubmit(handleSignIn)}/>
+          <Button
+            title="Acessar"
+            isLoading={isLoading}
+            onPress={handleSubmit(handleSignIn)}
+          />
         </Center>
         <Center mt={24}>
           <Text color="gray.100" fontSize="sm" mb={3} fontFamily="body">
