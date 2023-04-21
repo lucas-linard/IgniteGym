@@ -12,7 +12,7 @@ import {
 import { TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { AuthNavigationRouteProps } from "@routes/auth.routes";
+import { AppNavigatorRouteProps } from "@routes/app.routes";
 import BodySvg from "@assets/body.svg";
 import SeriesSvg from "@assets/series.svg";
 import RepetitionsSvg from "@assets/repetitions.svg";
