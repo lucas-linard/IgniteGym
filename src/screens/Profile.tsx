@@ -21,6 +21,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useAuth } from "@hooks/useAuth";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
 
 const PHOTO_SIZE = 33;
 
@@ -38,28 +40,29 @@ const profileSchema = yup.object({
     .string()
     .min(8, "A senha deve ter no mínimo 8 caracteres")
     .nullable()
-    .transform((value) => (!!value ? value : undefined)),
+    .transform((value) => (!!value ? value : null)),
   confirm_password: yup
     .string()
     .nullable()
-    .transform((value) => (!!value ? value : undefined))
-    .oneOf([yup.ref("password"), undefined], "As senhas não coincidem")
-    .when('password', {
-      is: (Field: any) => Field, 
+    .transform((value) => (!!value ? value : null))
+    .oneOf([yup.ref("password"), null], "As senhas não coincidem")
+    .when("password", {
+      is: (Field: any) => Field,
       then: yup
         .string()
         .nullable()
-        .required('Informe a confirmação da senha.')
-        .transform((value) => !!value ? value : undefined),
+        .required("Informe a confirmação da senha.")
+        .transform((value) => (!!value ? value : null)),
     }),
 });
 export function Profile() {
+  const [isUpdating, setIsUpdating] = useState(false);
   const [photoIsLoading, setPhotoIsLoading] = useState(false);
   const [userPhoto, setUserPhoto] = useState(
     "https://instagram.fssa20-1.fna.fbcdn.net/v/t51.2885-19/235455129_229264355750651_6579950562147653022_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fssa20-1.fna.fbcdn.net&_nc_cat=111&_nc_ohc=Hux_7mUMd-cAX8vP8eL&edm=ACWDqb8BAAAA&ccb=7-5&oh=00_AfC5W5AmNdi78XQjZqNNA1lvUASkjDzZDmu_QxqXjYx7_Q&oe=643C97AA&_nc_sid=1527a3"
   );
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const {
     control,
     handleSubmit,
@@ -108,8 +111,37 @@ export function Profile() {
   }
 
   async function handleProfileUpdate(data: FormDataProps) {
-    console.log(data);
+    try {
+      setIsUpdating(true);
+
+      const userUpdated = user
+      userUpdated.name = data.name;
+      
+      await api.put("/users", data );
+      
+      await updateUserProfile(userUpdated);
+      
+      toast.show({
+        title: "Perfil atualizado com sucesso!",
+        placement: "top",
+        bgColor: "green.500",
+      });
+    } catch (error) {
+      const isAppError = error instanceof AppError;
+      const errorMessage = isAppError
+        ? error.message
+        : "Não foi possível atualizar o  perfil. Tente novamente mais tarde";
+
+      toast.show({
+        title: errorMessage,
+        placement: "top",
+        bgColor: "red.500",
+      });
+    } finally{
+      setIsUpdating(false);
+    }
   }
+
   return (
     <VStack flex={1}>
       <ScreenHeader title="Perfil" />
@@ -221,6 +253,7 @@ export function Profile() {
             title="Atualizar"
             mt={4}
             onPress={handleSubmit(handleProfileUpdate)}
+            isLoading={isUpdating}
           />
         </Center>
       </ScrollView>
