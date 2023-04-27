@@ -17,6 +17,8 @@ import { useState } from "react";
 import { Input } from "@components/Input";
 import { Button } from "@components/Button";
 
+import userPhotoDefaultImg from "@assets/userPhotoDefault.png";
+
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useAuth } from "@hooks/useAuth";
@@ -58,9 +60,7 @@ const profileSchema = yup.object({
 export function Profile() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [photoIsLoading, setPhotoIsLoading] = useState(false);
-  const [userPhoto, setUserPhoto] = useState(
-    "https://instagram.fssa20-1.fna.fbcdn.net/v/t51.2885-19/235455129_229264355750651_6579950562147653022_n.jpg?stp=dst-jpg_s150x150&_nc_ht=instagram.fssa20-1.fna.fbcdn.net&_nc_cat=111&_nc_ohc=Hux_7mUMd-cAX8vP8eL&edm=ACWDqb8BAAAA&ccb=7-5&oh=00_AfC5W5AmNdi78XQjZqNNA1lvUASkjDzZDmu_QxqXjYx7_Q&oe=643C97AA&_nc_sid=1527a3"
-  );
+
   const toast = useToast();
   const { user, updateUserProfile } = useAuth();
   const {
@@ -104,22 +104,30 @@ export function Profile() {
 
         const fileExtension = photoSelected.assets[0].uri.split(".").pop();
 
-        const photoFile ={
+        const photoFile = {
           name: `${user.name}.${fileExtension}`.toLowerCase(),
           uri: photoSelected.assets[0].uri,
           type: `${photoSelected.assets[0].type}/${fileExtension}`,
-        } as any
+        } as any;
 
         const userPhotoUploadForm = new FormData();
-        userPhotoUploadForm.append("avatar",photoFile);
+        userPhotoUploadForm.append("avatar", photoFile);
 
-        await api.patch("/users/avatar", userPhotoUploadForm , {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const avatarUpdatedResponse = await api.patch(
+          "/users/avatar",
+          userPhotoUploadForm,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
 
-       toast.show({
+        const userUpdated = user;
+        userUpdated.avatar = avatarUpdatedResponse.data.avatar;
+        updateUserProfile(userUpdated);
+
+        toast.show({
           title: "Foto atualizada!",
           placement: "top",
           bgColor: "green.500",
@@ -136,13 +144,13 @@ export function Profile() {
     try {
       setIsUpdating(true);
 
-      const userUpdated = user
+      const userUpdated = user;
       userUpdated.name = data.name;
-      
-      await api.put("/users", data );
-      
+
+      await api.put("/users", data);
+
       await updateUserProfile(userUpdated);
-      
+
       toast.show({
         title: "Perfil atualizado com sucesso!",
         placement: "top",
@@ -159,7 +167,7 @@ export function Profile() {
         placement: "top",
         bgColor: "red.500",
       });
-    } finally{
+    } finally {
       setIsUpdating(false);
     }
   }
@@ -179,7 +187,11 @@ export function Profile() {
             />
           ) : (
             <UserPhoto
-              source={{ uri: userPhoto }}
+              source={
+                user.avatar
+                  ? { uri: `${api.defaults.baseURL}/avatar/${user.avatar}` }
+                  : userPhotoDefaultImg
+              }
               alt="Foto do usuário"
               size={PHOTO_SIZE}
             />
